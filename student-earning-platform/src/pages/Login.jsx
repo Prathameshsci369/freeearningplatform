@@ -11,24 +11,19 @@ const Login = () => {
     email: '',
     password: ''
   });
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
     
-    // MOCK LOGIN LOGIC
-    console.log("Logging in:", formData);
+    const result = await login(formData.email, formData.password);
     
-    // Simulate successful login
-    const mockUser = {
-      id: "user_123",
-      name: "Priya Sharma",
-      email: formData.email,
-      skills: ["Python", "Design"]
-    };
-    const mockToken = "mock_jwt_token_12345";
-
-    login(mockUser, mockToken);
-    navigate('/dashboard');
+    if (result.success) {
+      navigate('/dashboard');
+    } else {
+      setError(result.message);
+    }
   };
 
   return (
@@ -47,6 +42,13 @@ const Login = () => {
 
         <form className="space-y-5" onSubmit={handleSubmit}>
           
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm text-center">
+              {error}
+            </div>
+          )}
+
           {/* Email */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>

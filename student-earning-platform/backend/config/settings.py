@@ -45,7 +45,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
+   
+    'corsheaders.middleware.CorsMiddleware', 
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -126,3 +127,6 @@ REST_FRAMEWORK = {
         'authentication.authentication.CustomJWTAuthentication', # We will create this
     ]
 }
+
+CORS_ALLOW_ALL_ORIGINS = True  # Allows all origins (easier for development)
+CORS_ALLOW_CREDENTIALS = True

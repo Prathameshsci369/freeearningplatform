@@ -5,7 +5,7 @@ import { useUserStore } from '../store/userStore';
 
 const Signup = () => {
   const navigate = useNavigate();
-  const login = useUserStore((state) => state.login);
+  const signup = useUserStore((state) => state.signup);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -13,25 +13,19 @@ const Signup = () => {
     password: '',
     skills: ''
   });
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
     
-    // MOCK SIGNUP LOGIC
-    // In backend phase, this will be a POST to /api/auth/signup
-    console.log("Signing up:", formData);
-
-    // Simulate a successful registration & login
-    const mockUser = {
-      id: "user_123",
-      name: formData.name,
-      email: formData.email,
-      skills: formData.skills.split(',').map(s => s.trim())
-    };
-    const mockToken = "mock_jwt_token_12345";
-
-    login(mockUser, mockToken);
-    navigate('/dashboard'); // Redirect to dashboard after signup
+    const result = await signup(formData.name, formData.email, formData.password);
+    
+    if (result.success) {
+      navigate('/dashboard');
+    } else {
+      setError(result.message);
+    }
   };
 
   return (
@@ -56,6 +50,13 @@ const Signup = () => {
         {/* Form */}
         <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
           
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm text-center">
+              {error}
+            </div>
+          )}
+
           {/* Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>

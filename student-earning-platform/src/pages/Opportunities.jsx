@@ -1,11 +1,15 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import OpportunityCard from '../components/OpportunityCard';
 import FilterSidebar from '../components/FilterSidebar';
-import { mockOpportunities } from '../data/mockData';
+import axios from 'axios'; // Import axios for API calls
 
 const Opportunities = () => {
-  // State for our filters
+  // State for Opportunities fetched from Backend
+  const [opportunities, setOpportunities] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // State for Filters
   const [filters, setFilters] = useState({
     skills: [],
     skill_level: ''
@@ -14,23 +18,44 @@ const Opportunities = () => {
   // State for Search Input
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Filtering Logic (Client-Side for MVP)
-  const filteredOpportunities = useMemo(() => {
-    return mockOpportunities.filter((opp) => {
-      // 1. Match Search Term (Basic implementation)
-      const matchesSearch = opp.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                           opp.platform.toLowerCase().includes(searchTerm.toLowerCase());
+  // --- 1. Fetch Data from Django Backend ---
+  useEffect(() => {
+    const fetchOpportunities = async () => {
+      try {
+        setLoading(true);
+        // Call the Django API endpoint
+        const response = await axios.get('http://127.0.0.1:8000/api/opportunities/');
+        
+        // Store all opportunities in state
+        setOpportunities(response.data.results || []);
+      } catch (error) {
+        console.error("Error fetching opportunities:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      // 2. Match Skills (Check if selected skills intersect with required skills)
-      const matchesSkills = filters.skills.length === 0 || 
-                           filters.skills.some(skill => opp.skills_required.includes(skill));
+    fetchOpportunities();
+  }, []); // Empty array means run once on page load
 
-      // 3. Match Level
-      const matchesLevel = !filters.skill_level || opp.skill_level === filters.skill_level;
+  // --- 2. Client-Side Filtering Logic ---
+  // We filter the fetched data based on user selection
+  const filteredOpportunities = opportunities.filter((opp) => {
+    
+    // A. Match Search Term (Title or Platform)
+    const matchesSearch = searchTerm === '' || 
+      (opp.title && opp.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (opp.platform && opp.platform.toLowerCase().includes(searchTerm.toLowerCase()));
 
-      return matchesSearch && matchesSkills && matchesLevel;
-    });
-  }, [filters, searchTerm]);
+    // B. Match Skills (If user selected skills, check if job has them)
+    const matchesSkills = filters.skills.length === 0 || 
+      (opp.skills_required && filters.skills.some(skill => opp.skills_required.includes(skill)));
+
+    // C. Match Level
+    const matchesLevel = !filters.skill_level || opp.skill_level === filters.skill_level;
+
+    return matchesSearch && matchesSkills && matchesLevel;
+  });
 
   return (
     <div className="bg-gray-50 min-h-screen py-8">
@@ -69,17 +94,17 @@ const Opportunities = () => {
             
             {/* Results Count */}
             <div className="mb-4 text-sm text-gray-500">
-              Showing <span className="font-semibold text-gray-700">{filteredOpportunities.length}</span> results
+              {loading ? 'Loading...' : `Showing ${filteredOpportunities.length} results`}
             </div>
 
             {/* Opportunity Grid */}
-            {filteredOpportunities.length > 0 ? (
+            {!loading && filteredOpportunities.length > 0 ? (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredOpportunities.map((opp) => (
                   <OpportunityCard key={opp.id} opportunity={opp} />
                 ))}
               </div>
-            ) : (
+            ) : !loading && filteredOpportunities.length === 0 ? (
               <div className="text-center py-16 bg-white rounded-xl border border-gray-100">
                 <p className="text-gray-500">No opportunities match your filters.</p>
                 <button 
@@ -88,6 +113,11 @@ const Opportunities = () => {
                 >
                   Clear Filters
                 </button>
+              </div>
+            ) : (
+              // Loading Skeleton
+              <div className="text-center py-16 text-gray-400">
+                Loading opportunities from database...
               </div>
             )}
 
