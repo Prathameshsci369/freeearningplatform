@@ -21,14 +21,13 @@ const Navbar = () => {
             <Link to="/opportunities" className="text-gray-600 hover:text-primary font-medium transition">
               Opportunities
             </Link>
-            <Link to="/guides" className="text-gray-600 hover:text-primary font-medium transition">
-              Guides
+            <Link to="/earnings" className="text-gray-600 hover:text-primary font-medium transition">
+              Earnings
             </Link>
           </div>
 
           <div className="flex items-center space-x-4">
             {user ? (
-              // If User is Logged In
               <>
                 <Link to="/dashboard" className="flex items-center gap-2 text-gray-600 hover:text-primary font-medium">
                    <LayoutDashboard size={18} /> Dashboard
@@ -41,7 +40,6 @@ const Navbar = () => {
                 </button>
               </>
             ) : (
-              // If User is Guest
               <>
                 <Link to="/login" className="hidden sm:block text-gray-600 hover:text-primary font-medium">
                   Log in

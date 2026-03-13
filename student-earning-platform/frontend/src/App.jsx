@@ -5,7 +5,8 @@ import Opportunities from './pages/Opportunities';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
-
+import SavedJobs from './pages/SavedJobs';
+import Earnings from './pages/Earnings';
 function App() {
   return (
     <Router>
@@ -17,6 +18,8 @@ function App() {
           <Route path="login" element={<Login />} />
           <Route path="signup" element={<Signup />} />
           <Route path="dashboard" element={<Dashboard />} />
+          <Route path="saved" element={<SavedJobs />} />
+          <Route path="earnings" element={<Earnings />} />
         </Route>
       </Routes>
     </Router>

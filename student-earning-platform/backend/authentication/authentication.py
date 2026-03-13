@@ -3,19 +3,29 @@ from rest_framework import authentication, exceptions
 from django.conf import settings
 from .firestore import user_db
 
-# Must match the secret used in views.py
 JWT_SECRET = 'your_super_secret_key_here_123' 
 JWT_ALGORITHM = 'HS256'
 
+# 1. Create a simple wrapper class to mimic Django User
+class FirebaseUser:
+    def __init__(self, user_dict):
+        self.user_dict = user_dict
+        # Pass dictionary keys as attributes (e.g., user.id, user.email)
+        for key, value in user_dict.items():
+            setattr(self, key, value)
+
+    @property
+    def is_authenticated(self):
+        # This is what Django checks for permission
+        return True
+
 class CustomJWTAuthentication(authentication.BaseAuthentication):
     def authenticate(self, request):
-        # 1. Get the Authorization header
         auth_header = request.headers.get('Authorization')
         
         if not auth_header:
-            return None # No auth header, let request proceed (or deny if view requires auth)
+            return None 
 
-        # 2. Check format: "Bearer <token>"
         try:
             prefix, token = auth_header.split(' ')
             if prefix.lower() != 'bearer':
@@ -23,7 +33,6 @@ class CustomJWTAuthentication(authentication.BaseAuthentication):
         except ValueError:
             raise exceptions.AuthenticationFailed('Invalid authorization header.')
 
-        # 3. Decode Token
         try:
             payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         except jwt.ExpiredSignatureError:
@@ -31,12 +40,11 @@ class CustomJWTAuthentication(authentication.BaseAuthentication):
         except jwt.DecodeError:
             raise exceptions.AuthenticationFailed('Invalid token.')
 
-        # 4. Get User from Firebase
         user_id = payload.get('user_id')
-        user = user_db.get_user_by_id(user_id) # We need to add this method to firestore.py
+        user = user_db.get_user_by_id(user_id)
 
         if user is None:
             raise exceptions.AuthenticationFailed('User not found.')
 
-        # Return (user, token) - Django uses this for request.user
-        return (user, token)
+        # 2. Return the WRAPPED user, not the raw dictionary
+        return (FirebaseUser(user), token)
